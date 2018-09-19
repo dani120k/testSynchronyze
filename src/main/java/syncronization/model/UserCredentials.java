@@ -2,18 +2,32 @@ package syncronization.model;
 
 import com.google.gson.Gson;
 
+import javax.persistence.*;
 import java.util.Collection;
 
+@Entity
+@Table(name = "users")
 public class UserCredentials {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "org_unit_id")
     private Long orgUnitId;
 
+    @Column(name = "user_info_id")
     private Long userInfoId;
+
+    @Column(name = "user_login")
     private String userLogin;
 
+    @Column(name = "enabled")
     private Boolean enabled;
 
+
+    @OneToMany(fetch = FetchType.EAGER)
+    @JoinColumn(name="user_id", referencedColumnName="id")
     private Collection<DeviceInfo> deviceInfos;
 
 

@@ -41,8 +41,10 @@ public class ImportHashTable {
     }
 
     public void importUsers(OrgUnit orgUnit){
-        for(UserInfo userInfo : orgUnit.getUserInfos()) {
-            userInfoHashtable.put(userInfo.getEmail(), userInfo);
+        if (orgUnit.getUserInfos() != null) {
+            for (UserInfo userInfo : orgUnit.getUserInfos()) {
+                userInfoHashtable.put(userInfo.getEmail(), userInfo);
+            }
         }
     }
 

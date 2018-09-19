@@ -72,6 +72,52 @@ public class StructureCreating {
         System.out.println(str);
     }
 
+    public static void updateDomain(ProgrammConfig programmConfig, Domain domain)throws KeyStoreException, NoSuchAlgorithmException,
+            KeyManagementException{
+        TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> {
+            System.out.println(chain[0].getIssuerX500Principal().getName());
+            return true;
+        };
+
+        SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom()
+                .loadTrustMaterial(null, acceptingTrustStrategy)
+                .build();
+
+
+        SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+
+        CloseableHttpClient httpClient = HttpClients.custom()
+                .setSSLSocketFactory(csf)
+                .build();
+
+        HttpComponentsClientHttpRequestFactory requestFactory =
+                new HttpComponentsClientHttpRequestFactory();
+
+        requestFactory.setHttpClient(httpClient);
+
+        String plainCreds = "admin:test";
+        byte[] plainCredsBytes = plainCreds.getBytes();
+        byte[] base64CredsBytes = Base64.getEncoder().encodeToString(plainCredsBytes).getBytes();
+        String base64Creds = new String(base64CredsBytes);
+
+
+        RestTemplate restTemplate = new RestTemplate(requestFactory);
+
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Basic " + base64Creds);
+
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> entity = new HttpEntity<>(domain.toString(), headers);
+
+        ResponseEntity<String> response = restTemplate
+                .exchange("https://" + programmConfig.getServerHost() + ":" + programmConfig.getServerPort() +"/admin/update/domain", HttpMethod.POST, entity, String.class);
+
+
+        String str  = response.getBody();
+        System.out.println(str);
+    }
+
     public static void createHierarchyGroup(ProgrammConfig programmConfig, HierarchyGroup hgroup) throws KeyStoreException, NoSuchAlgorithmException,
             KeyManagementException{
         TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> {
@@ -305,7 +351,7 @@ public class StructureCreating {
         HttpEntity<String> entity = new HttpEntity<String>("", headers);
 
         ResponseEntity<String> response = restTemplate
-                .exchange("https://" + programmConfig.getServerHost() + ":" + programmConfig.getServerPort() +"/admin/get/domain", HttpMethod.GET, entity, String.class);
+                .exchange("https://" + programmConfig.getServerHost() + ":" + programmConfig.getServerPort() +"/admin/get/domain", HttpMethod.POST, entity, String.class);
 
         System.out.println(response.getStatusCode());
         String str  = response.getBody();
@@ -367,7 +413,7 @@ public class StructureCreating {
         Gson gson = new Gson();
         String jsonOutput = str;
         System.out.println(jsonOutput);
-        Type listType = new TypeToken<UserInfo>(){}.getType();
+        Type listType = new TypeToken<List<UserInfo>>(){}.getType();
         List<UserInfo> userInfos =  (List<UserInfo>)  gson.fromJson(jsonOutput, listType);
         for(int i = 0; i < userInfos.size(); i++)
             System.out.println(userInfos.get(i).toString());

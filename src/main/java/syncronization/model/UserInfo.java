@@ -2,29 +2,52 @@ package syncronization.model;
 
 import com.google.gson.Gson;
 
+import javax.persistence.*;
 import java.sql.Timestamp;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 
+@Entity
+@Table(name = "user_info")
 public class UserInfo {
 
     public UserInfo() {
     }
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "first_name")
     private String firstName;
+
+    @Column(name = "last_name")
     private String lastName;
 
+    @Column(name = "midle_name")
     private String midleName;
 
+    //FIXME
+    //https://stackoverflow.com/questions/25738569/jpa-map-json-column-to-java-object
+    @Column(name = "phones")
     private String phones;
 
+    @Column(name = "email")
     private String email;
+
+    @Column(name = "org_unit_id")
     private Long orgUnitId;
+
+    @Column(name = "position")
     private String position;
 
+    //Здесь есть неразрешенная ошибка
+    //OneToOne не хочет маппиться - хз в чем дело, ошибка заведена
+    //Будем разбираться
+    @OneToMany(fetch = FetchType.EAGER)
+    @JoinColumn(name="user_info_id", referencedColumnName="id", updatable = false)
     private Collection<UserCredentials> userCredentials;
 
     @Override
@@ -34,8 +57,10 @@ public class UserInfo {
     }
 
 
+    @Transient
     private boolean interactionAllowed;
 
+    @Transient
     private List<Timestamp> requestCreationTimestamps;
 
     public Long getId() {

@@ -2,17 +2,29 @@ package syncronization.model;
 
 import com.google.gson.Gson;
 
+import javax.persistence.*;
+
+@Entity
+@Table(name = "device_platform")
 public class DeviceInfo {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "user_id")
     private Long userId;
 
+    @Column(name = "platform_name")
     private String platformName;
 
+    @Column(name = "platform_version")
     private String platformVersion;
 
+    @Column(name = "platform_info")
     private String platformInfo;
 
+    @Column(name = "device_id")
     private String deviceId;
 
 

@@ -2,18 +2,39 @@ package syncronization.model;
 
 import com.google.gson.Gson;
 
+import javax.persistence.*;
 import java.util.Collection;
 
+
+@Entity
+@Table(name = "org_units")
 public class OrgUnit {
 
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(name = "name")
     private String orgUnitName;
+
+    @Column(name = "description")
     private String description;
+
+    @Column(name = "group_id")
     private Long groupId;
+
+    @Column(name = "domain_id")
     private Long domainId;
+
+    @OneToMany(fetch = FetchType.EAGER)
+    @JoinColumn(name="org_unit_id", referencedColumnName="id", updatable = false)
     private Collection<UserInfo> userInfos;
+
+    @Transient
     private Long totalUsers;
 
+
+    @Transient
     private Long totalDevices;
 
 
@@ -88,4 +109,3 @@ public class OrgUnit {
         this.totalDevices = totalDevices;
     }
 }
-
