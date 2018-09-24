@@ -112,9 +112,23 @@ public class App
     }
 
     public static void fullUpdate(HashMap<String, DomainHashMap> domainHashMapHashMap, Domain domain){
-        //DomainService domainService = ctx.getBean(DomainService.class);
-        //domainService.updateDomain(domain);
+        DomainService domainService = ctx.getBean(DomainService.class);
+        domain.setId(domainHashMapHashMap.get(domain.getDomainName()).getDomain().getId());
+        domainService.updateDomain(domain);
         domainHashMapHashMap.remove(domain.getDomainName());
+        for(OrgUnit orgUnit : domain.getOrgUnits()) {
+            fullUpdateOrgUnits(orgUnit, domainHashMapHashMap.get(domain.getDomainName()));
+        }
+    }
+
+    public static void fullUpdateOrgUnits(OrgUnit orgUnit, DomainHashMap domainHashMap){
+        if (domainHashMap.containsKey(orgUnit.getOrgUnitName())){
+            //fix it later
+        }
+        else{
+
+        }
+        //fullOrgUnitDelete(domainHashMap.get;
     }
 
     public static void update(List<Domain> domains, HashMap<String, DomainHashMap> domainHashMapHashMap){
@@ -141,7 +155,7 @@ public class App
         programmConfig.setServerPort("8089");
         Domain newdomain = new Domain();
         newdomain.setDomainName("domain_name1");
-        newdomain.setDomainType(0L);
+        newdomain.setDomainType(1L);
         newdomain.setOrgUnits(new ArrayList<>());
         OrgUnit newOrgUnit = new OrgUnit();
         newOrgUnit.setOrgUnitName("newOrgUnitName");
