@@ -59,9 +59,9 @@ public class Domain {
         //Так как нам нужны только домены и отделы
         //мы просто отсекаем все, что в отделах находится
 
-        for(OrgUnit orgUnit : orgUnits) {
-            orgUnit.setUserInfos(null);
-        }
+        //for(OrgUnit orgUnit : orgUnits) {
+           // orgUnit.setUserInfos(null);
+       // }
 
 
         Gson gson = new Gson();

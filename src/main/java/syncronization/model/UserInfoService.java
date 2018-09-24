@@ -47,5 +47,9 @@ public class UserInfoService{
         userInfoRepository.delete(userInfo);
     }
 
+    @Transactional("jpaTransactionManager")
+    public List<UserInfo> findByOrgUnitId(Long id) {
+        return (List<UserInfo>)userInfoRepository.findByDomainId(id);
+    }
 
 }

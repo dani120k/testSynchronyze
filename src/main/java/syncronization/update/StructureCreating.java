@@ -351,7 +351,7 @@ public class StructureCreating {
         HttpEntity<String> entity = new HttpEntity<String>("", headers);
 
         ResponseEntity<String> response = restTemplate
-                .exchange("https://" + programmConfig.getServerHost() + ":" + programmConfig.getServerPort() +"/admin/get/domain", HttpMethod.POST, entity, String.class);
+                .exchange("https://" + programmConfig.getServerHost() + ":" + programmConfig.getServerPort() +"/admin/get/domain", HttpMethod.GET, entity, String.class);
 
         System.out.println(response.getStatusCode());
         String str  = response.getBody();
@@ -360,8 +360,9 @@ public class StructureCreating {
         String jsonOutput = str;
         Type listType = new TypeToken<List<Domain>>(){}.getType();
         List<Domain> domains = (List<Domain>) gson.fromJson(jsonOutput, listType);
-        for(int i = 0; i < domains.size(); i++)
-            System.out.println(domains.get(i).toString());
+        for(Domain domain : domains){
+            System.out.println(domain.toString());
+        }
 
         return domains;
     }
@@ -468,11 +469,57 @@ public class StructureCreating {
         Gson gson = new Gson();
         String jsonOutput = str;
         System.out.println(jsonOutput);
-        Type listType = new TypeToken<OrgUnit>(){}.getType();
+        Type listType = new TypeToken<List<OrgUnit>>(){}.getType();
         List<OrgUnit> orgUnits =  (List<OrgUnit>)  gson.fromJson(jsonOutput, listType);
         for(int i = 0; i < orgUnits.size(); i++)
             System.out.println(orgUnits.get(i).toString());
 
         return orgUnits;
+    }
+
+    public static void deleteDomain(ProgrammConfig programmConfig, Domain domain)throws KeyStoreException, NoSuchAlgorithmException,
+            KeyManagementException{
+        TrustStrategy acceptingTrustStrategy = (X509Certificate[] chain, String authType) -> {
+            System.out.println(chain[0].getIssuerX500Principal().getName());
+            return true;
+        };
+
+        SSLContext sslContext = org.apache.http.ssl.SSLContexts.custom()
+                .loadTrustMaterial(null, acceptingTrustStrategy)
+                .build();
+
+
+        SSLConnectionSocketFactory csf = new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+
+        CloseableHttpClient httpClient = HttpClients.custom()
+                .setSSLSocketFactory(csf)
+                .build();
+
+        HttpComponentsClientHttpRequestFactory requestFactory =
+                new HttpComponentsClientHttpRequestFactory();
+
+        requestFactory.setHttpClient(httpClient);
+
+        String plainCreds = "admin:test";
+        byte[] plainCredsBytes = plainCreds.getBytes();
+        byte[] base64CredsBytes = Base64.getEncoder().encodeToString(plainCredsBytes).getBytes();
+        String base64Creds = new String(base64CredsBytes);
+
+
+        RestTemplate restTemplate = new RestTemplate(requestFactory);
+
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.add("Authorization", "Basic " + base64Creds);
+
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> entity = new HttpEntity<String>(domain.toString(), headers);
+
+        ResponseEntity<String> response = restTemplate
+                .exchange("https://" + programmConfig.getServerHost() + ":" + programmConfig.getServerPort() +"/admin/delete/domain", HttpMethod.POST, entity, String.class);
+
+        System.out.println(response.getStatusCode());
+        String str  = response.getBody();
+        System.out.println("output is " + str);
     }
 }
