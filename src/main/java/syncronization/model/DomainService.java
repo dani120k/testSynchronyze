@@ -33,5 +33,9 @@ public class DomainService {
         repository.save(domain);
     }
 
+    @Transactional("jpaTransactionManager")
+    public Domain getByDomainName(String domainName) {
+        return (Domain) repository.findByDomainName(domainName);
+    }
 
 }

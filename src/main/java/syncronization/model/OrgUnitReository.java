@@ -10,6 +10,6 @@ import java.util.Optional;
 
 @Repository
 public interface OrgUnitReository<P> extends CrudRepository<OrgUnit, Long> {
-    @Query("select b from OrgUnit b where b.domainId = :domain_id")
-    Iterable<P> findByDomainId(@Param("domain_id") Long name);
+    @Query("select b from OrgUnit b where b.orgUnitName = :orgUnitName")
+    P findByOrgUnitName(@Param("orgUnitName") String orgUnitName);
 }

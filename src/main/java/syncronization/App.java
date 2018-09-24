@@ -1,5 +1,6 @@
 package syncronization;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.web.bind.UnsatisfiedServletRequestParameterException;
@@ -16,25 +17,7 @@ import java.util.*;
  */
 public class App 
 {
-    public static List<Domain> getNewInfo(){
-        return new ArrayList<>();
-    }
-
-    public static void updateDomain(Domain domain){
-    }
-
-    public static void createDomain(Domain domain){
-    }
-
-    public static void updateOrgUnit(OrgUnit orgUnit){
-    }
-
-    public static void createOrgUnit(OrgUnit orgUnit){
-    }
-
-    public static List<UserInfo> getUserInfo(){
-        return new ArrayList<>();
-    }
+    public static AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(ApplicationConfig.class);
 
     public static  void createStruct(ProgrammConfig programmConfig){
         OrgUnit orgUnit = new OrgUnit();
@@ -71,13 +54,122 @@ public class App
         }
     }
 
+    public static void fullDomainDelete(DomainHashMap domain){
+        DomainService domainService = ctx.getBean(DomainService.class);
+        OrgUnitService orgUnitService = ctx.getBean(OrgUnitService.class);
+        UserInfoService userInfoService = ctx.getBean(UserInfoService.class);
+
+        if (domain.values().size() == 0){
+            domainService.deleteDomain(domain.getDomain());
+        }
+        else
+        {
+            Collection<OrgUnitHashMap> orgUnitHashMaps = domain.values();
+            for(OrgUnitHashMap orgUnitHashMap : orgUnitHashMaps){
+                if (orgUnitHashMap.values().size() == 0){
+                    System.out.println(orgUnitHashMap.getOrgUnit().toString());
+                    orgUnitService.deleteOrgUnit(orgUnitHashMap.getOrgUnit());
+                }
+                else
+                {
+                    Collection<UserInfo> userInfos = orgUnitHashMap.values();
+                    for(UserInfo userInfo : userInfos){
+                        userInfoService.deleteUserInfo(userInfo);
+                    }
+                }
+            }
+        }
+    }
+
+    public static void fullDomainAdd(Domain domain){
+        DomainService domainService = ctx.getBean(DomainService.class);
+
+        domainService.addDomain(domain);
+        Domain updatedDomain = domainService.getByDomainName(domain.getDomainName());
+        for(OrgUnit orgUnit : domain.getOrgUnits()){
+            orgUnit.setGroupId(1L);
+            orgUnit.setDomainId(domain.getId());
+            fullOrgUnitAdd(orgUnit);
+        }
+    }
+
+    public static void fullOrgUnitAdd(OrgUnit orgUnit){
+        OrgUnitService orgUnitService = ctx.getBean(OrgUnitService.class);
+        orgUnitService.addOrgUnit(orgUnit);
+        OrgUnit updatedOrgUnit = orgUnitService.getByDomainName(orgUnit.getOrgUnitName());
+        if (orgUnit.getUserInfos().size()!=0)
+        {
+            for(UserInfo userInfo : orgUnit.getUserInfos()) {
+                userInfo.setOrgUnitId(updatedOrgUnit.getId());
+                userInfoAdd(userInfo);
+            }
+        }
+    }
+
+    public static void userInfoAdd(UserInfo userInfo){
+        UserInfoService userInfoService = ctx.getBean(UserInfoService.class);
+        userInfoService.addUserInfo(userInfo);
+    }
+
+    public static void fullUpdate(HashMap<String, DomainHashMap> domainHashMapHashMap, Domain domain){
+        //DomainService domainService = ctx.getBean(DomainService.class);
+        //domainService.updateDomain(domain);
+        domainHashMapHashMap.remove(domain.getDomainName());
+    }
+
+    public static void update(List<Domain> domains, HashMap<String, DomainHashMap> domainHashMapHashMap){
+        for(Domain domain :domains){
+            if (domainHashMapHashMap.containsKey(domain.getDomainName())){
+                fullUpdate(domainHashMapHashMap, domain);
+            }
+            else
+            {
+                fullDomainAdd(domain);
+            }
+        }
+        Collection<DomainHashMap> domainCollection = domainHashMapHashMap.values();
+        for(DomainHashMap domainHashMap : domainCollection){
+            fullDomainDelete(domainHashMap);
+        }
+    }
+
     public static void main( String[] args )
     {
-        AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(ApplicationConfig.class);
+
         ProgrammConfig programmConfig = new ProgrammConfig();
         programmConfig.setServerHost("127.0.0.1");
         programmConfig.setServerPort("8089");
+        Domain newdomain = new Domain();
+        newdomain.setDomainName("domain_name1");
+        newdomain.setDomainType(0L);
+        newdomain.setOrgUnits(new ArrayList<>());
+        OrgUnit newOrgUnit = new OrgUnit();
+        newOrgUnit.setOrgUnitName("newOrgUnitName");
+        newOrgUnit.setTotalDevices(10L);
+        newOrgUnit.setDescription("desc");
 
+        UserInfo userInfo1 = new UserInfo();
+        userInfo1.setFirstName("fName1");
+        userInfo1.setLastName("lName1");
+        userInfo1.setEmail("email1@gmail.com");
+        userInfo1.setPhones("88005553535");
+        userInfo1.setPosition("position");
+
+        UserInfo userInfo2 = new UserInfo();
+        userInfo2.setFirstName("fName2");
+        userInfo2.setLastName("lName2");
+        userInfo2.setEmail("email2@gmail.com");
+        userInfo2.setPhones("880053535");
+        userInfo2.setPosition("position");
+
+        List<UserInfo> userInfos = new ArrayList<>();
+        userInfos.add(userInfo1);
+        userInfos.add(userInfo2);
+        newOrgUnit.setUserInfos(userInfos);
+
+        List<OrgUnit> orgUnits = new ArrayList<>();
+        orgUnits.add(newOrgUnit);
+        newdomain.setOrgUnits(orgUnits);
 
         HashMap<String, DomainHashMap> domainHashMap = new HashMap<>();
         try {
@@ -89,19 +181,44 @@ public class App
         } catch(Exception ex){
             ex.printStackTrace();
         }
-        System.out.println("end og");
-        Collection<DomainHashMap> domainHashMaps = domainHashMap.values();
-        for(DomainHashMap dhm : domainHashMaps){
-            System.out.println("domain is " + dhm.getDomain().toString());
-            System.out.println("orgUnits is " + dhm.getAllOrgUnits().size());
-            Collection<OrgUnitHashMap> orgUnitHashMaps = dhm.values();
-            for(OrgUnitHashMap orgUnite : orgUnitHashMaps) {
-                Collection<UserInfo> userInfos = orgUnite.values();
-                for(UserInfo userInfo : userInfos){
-                    System.out.println(userInfo);
-                }
-            }
-        }
+        List<Domain> newDomains = new ArrayList<>();
+        newDomains.add(newdomain);
+
+        Domain newdomain1 = new Domain();
+        newdomain1.setDomainName("domain_name2");
+        newdomain1.setDomainType(0L);
+        newdomain1.setOrgUnits(new ArrayList<>());
+        OrgUnit newOrgUnit1 = new OrgUnit();
+        newOrgUnit1.setOrgUnitName("newOrgUnitName2");
+        newOrgUnit1.setTotalDevices(10L);
+        newOrgUnit1.setDescription("desc");
+
+        UserInfo userInfo3 = new UserInfo();
+        userInfo3.setFirstName("fName3");
+        userInfo3.setLastName("lName1");
+        userInfo3.setEmail("email3@gmail.com");
+        userInfo3.setPhones("880053553535");
+        userInfo3.setPosition("position");
+
+        UserInfo userInfo4 = new UserInfo();
+        userInfo4.setFirstName("fName4");
+        userInfo4.setLastName("lName2");
+        userInfo4.setEmail("email4@gmail.com");
+        userInfo4.setPhones("8800543535");
+        userInfo4.setPosition("position");
+
+        List<UserInfo> userInfos1 = new ArrayList<>();
+        userInfos1.add(userInfo3);
+        userInfos1.add(userInfo4);
+        newOrgUnit1.setUserInfos(userInfos1);
+
+        List<OrgUnit> orgUnits1 = new ArrayList<>();
+        orgUnits1.add(newOrgUnit1);
+        newdomain1.setOrgUnits(orgUnits1);
+
+        newDomains.add(newdomain1);
+
+        update(newDomains, domainHashMap);
 
         /*DomainService domainService = ctx.getBean(DomainService.class);
 

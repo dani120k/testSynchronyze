@@ -32,7 +32,7 @@ public class OrgUnitService {
         repository.save(orgUnit);
     }
 
-    public List<OrgUnit> getByDomainId(Long domainId){
-        return (List<OrgUnit>) repository.findByDomainId(domainId);
+    public OrgUnit getByDomainName(String orgUnitName){
+        return (OrgUnit) repository.findByOrgUnitName(orgUnitName);
     }
 }
