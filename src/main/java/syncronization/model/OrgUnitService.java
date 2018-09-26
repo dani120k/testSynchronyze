@@ -28,11 +28,11 @@ public class OrgUnitService {
     }
 
     @Transactional("jpaTransactionManager")
-    public void updateUserInfo(OrgUnit orgUnit) {
+    public void updateOrgUnit(OrgUnit orgUnit) {
         repository.save(orgUnit);
     }
 
-    public OrgUnit getByDomainName(String orgUnitName){
+    public OrgUnit getByOrgUnitName(String orgUnitName){
         return (OrgUnit) repository.findByOrgUnitName(orgUnitName);
     }
 }
