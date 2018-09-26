@@ -1,40 +1,40 @@
-package syncronization;
+package syncronization.mapServices.impl;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import syncronization.ApplicationConfig;
-import syncronization.last_test.DomainHashMap;
-import syncronization.last_test.OrgUnitHashMap;
-import syncronization.mapServices.DomainMapService;
+import syncronization.hashMaps.DomainHashMap;
+import syncronization.hashMaps.OrgUnitHashMap;
+import syncronization.mapServices.ServiceMap;
 import syncronization.model.Domain;
 import syncronization.model.DomainService;
 import syncronization.model.OrgUnit;
 import syncronization.model.OrgUnitService;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
-public class DomainServiceMapImpl implements DomainMapService {
-    HashMap<String, DomainHashMap> domainHashMapHashMap;
-    public static AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(ApplicationConfig.class);
+public class DomainServiceMapImpl implements ServiceMap<Domain> {
+    @Autowired
+    DomainService domainService = new AnnotationConfigApplicationContext(ApplicationConfig.class).getBean(DomainService.class);
+    private DomainHashMap domainHashMap;
 
-    public DomainServiceMapImpl(HashMap<String, DomainHashMap> domainHashMapHashMap){
-        this.domainHashMapHashMap = domainHashMapHashMap;
-        this.update();
+    public DomainServiceMapImpl(DomainHashMap domainHashMap){
+        this.domainHashMap = domainHashMap;
     }
 
-    private void update(){
-
+    public DomainServiceMapImpl(){
     }
 
-    public static void fullUpdateDomain(DomainHashMap domainHashMap, Domain newDomain){
+    @Override
+    public void update(Domain newDomain){
         Domain oldDomain = domainHashMap.getDomain();
-        DomainService domainService = ctx.getBean(DomainService.class);
         List<OrgUnit> addOrgUnits = new ArrayList<>();
         for(OrgUnit orgUnit : newDomain.getOrgUnits()){
             if (domainHashMap.containsKey(orgUnit.getOrgUnitName())){
                 System.out.println("Update " + orgUnit.toString());
-                OrgUnitServiceMapImpl.fullUpdate(domainHashMap.get(orgUnit.getOrgUnitName()), orgUnit);
+                OrgUnitServiceMapImpl orgUnitServiceMap = new OrgUnitServiceMapImpl(domainHashMap.get(orgUnit.getOrgUnitName()));
+                orgUnitServiceMap.update(orgUnit);
                 domainHashMap.remove(orgUnit.getOrgUnitName());
             } else {
                 orgUnit.setGroupId(1L);
@@ -43,15 +43,17 @@ public class DomainServiceMapImpl implements DomainMapService {
             }
         }
 
-        for(OrgUnitHashMap orgUnit : domainHashMap.values()){
-            OrgUnitServiceMapImpl.fullDelete(orgUnit.getOrgUnit());
+        for(OrgUnitHashMap orgUnitHashMap : domainHashMap.values()){
+            OrgUnitServiceMapImpl orgUnitServiceMap = new OrgUnitServiceMapImpl(orgUnitHashMap);
+            orgUnitServiceMap.delete(orgUnitHashMap.getOrgUnit());
         }
 
         for(OrgUnit orgUnit : addOrgUnits){
             orgUnit.setGroupId(1L);
             orgUnit.setDomainId(oldDomain.getId());
             orgUnit.setId(10000L);
-            OrgUnitServiceMapImpl.fullAdd(orgUnit);
+            OrgUnitServiceMapImpl orgUnitServiceMap = new OrgUnitServiceMapImpl();
+            orgUnitServiceMap.add(orgUnit);
         }
 
         newDomain.setId(oldDomain.getId());
@@ -59,26 +61,27 @@ public class DomainServiceMapImpl implements DomainMapService {
         domainService.updateDomain(newDomain);
     }
 
-    public static void fullDeleteDomain(Domain domain){
-        DomainService domainService = ctx.getBean(DomainService.class);
+    @Override
+    public void delete(Domain domain){
         for(OrgUnit orgUnit:domain.getOrgUnits()){
-            OrgUnitServiceMapImpl.fullDelete(orgUnit);
+            OrgUnitServiceMapImpl orgUnitServiceMap = new OrgUnitServiceMapImpl();
+            orgUnitServiceMap.delete(orgUnit);
         }
         domain.setOrgUnits(new ArrayList<>());
         domainService.deleteDomain(domain);
     }
 
-    public static void fullAddDomain(Domain domain){
-        DomainService domainService = ctx.getBean(DomainService.class);
+    @Override
+    public void add(Domain domain){
         domain.setId(10000L);///fix it
         domainService.addDomain(domain);
         Domain updatedDomain = domainService.getByDomainName(domain.getDomainName());
         for(OrgUnit orgUnit:domain.getOrgUnits()){
-            OrgUnitServiceMapImpl orgUnitServiceMap = new OrgUnitServiceMapImpl();
             orgUnit.setGroupId(1L);
             orgUnit.setDomainId(updatedDomain.getId());
             orgUnit.setId(100000L);
-            orgUnitServiceMap.fullAdd(orgUnit);
+            OrgUnitServiceMapImpl orgUnitServiceMap = new OrgUnitServiceMapImpl();
+            orgUnitServiceMap.add(orgUnit);
         }
 
     }

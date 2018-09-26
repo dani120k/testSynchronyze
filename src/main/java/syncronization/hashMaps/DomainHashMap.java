@@ -1,4 +1,4 @@
-package syncronization.last_test;
+package syncronization.hashMaps;
 
 import syncronization.model.Domain;
 import syncronization.model.OrgUnit;
@@ -14,20 +14,6 @@ public class DomainHashMap extends HashMap<String, OrgUnitHashMap> {
 
     public Domain getDomain(){
         return domain;
-    }
-
-    public List<OrgUnit> getAllOrgUnits(){
-        Collection<OrgUnitHashMap> orgUnits = this.values();
-        System.out.println("size is " + orgUnits.size());
-        List<OrgUnit> orgUnits1 = new ArrayList<>();
-        for(OrgUnitHashMap orgUnit : orgUnits){
-            orgUnits1.add(orgUnit.getOrgUnit());
-        }
-        return orgUnits1;
-    }
-
-    public String getDomainName(){
-        return domain.getDomainName();
     }
 
     private void importFromList(){

@@ -1,15 +1,9 @@
 package syncronization;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.core.convert.converter.Converter;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.web.bind.UnsatisfiedServletRequestParameterException;
-import syncronization.last_test.DomainHashMap;
-import syncronization.last_test.OrgUnitHashMap;
-import syncronization.last_test.UserInfoHashMap;
-import syncronization.mapServices.DomainMapService;
-import syncronization.mapServices.impl.DomainMapServiceImpl;
+import syncronization.hashMaps.DomainHashMap;
+import syncronization.hashMaps.OrgUnitHashMap;
+import syncronization.mapServices.impl.DomainServiceMapImpl;
 import syncronization.model.*;
 import syncronization.update.StructureCreating;
 
@@ -21,172 +15,10 @@ import java.util.*;
  */
 public class App 
 {
-    public static AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(ApplicationConfig.class);
-
-    public static  void createStruct(ProgrammConfig programmConfig){
-        OrgUnit orgUnit = new OrgUnit();
-        orgUnit.setUserInfos(new ArrayList<>());
-        orgUnit.setDomainId(3L);
-        orgUnit.setGroupId(1L);
-        orgUnit.setTotalDevices(10L);
-        orgUnit.setDescription("desc");
-        orgUnit.setOrgUnitName("org_unit_name");
-        orgUnit.setId(100L);
-        try {
-            StructureCreating.createOrgUnit(programmConfig, orgUnit);
-            List<OrgUnit> orgUnits = StructureCreating.getListOfOrgUnits(programmConfig);
-            OrgUnit curr = new OrgUnit();
-            for(OrgUnit orgUnit1:orgUnits){
-                if (orgUnit.getOrgUnitName().equals(orgUnit1.getOrgUnitName()))
-                    curr = orgUnit1;
-            }
-
-            UserInfo userInfo = new UserInfo();
-            userInfo.setPosition("position");
-            userInfo.setId(1000L);
-            userInfo.setPhones("88005553535");
-            userInfo.setEmail("ololo1@gmail.com");
-            userInfo.setFirstName("fName");
-            userInfo.setLastName("lName");
-            userInfo.setMidleName("mName");
-            userInfo.setRequestCreationTimestamps(new ArrayList<>());
-            userInfo.setOrgUnitId(curr.getId());
-            //StructureCreating.createUserInfo(programmConfig, userInfo);
-            //Thread.sleep(10000);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-    }
-
-    public static void fullDomainDelete(DomainHashMap domain){
-        DomainService domainService = ctx.getBean(DomainService.class);
-        OrgUnitService orgUnitService = ctx.getBean(OrgUnitService.class);
-        UserInfoService userInfoService = ctx.getBean(UserInfoService.class);
-
-        if (domain.values().size() == 0){
-            domainService.deleteDomain(domain.getDomain());
-        }
-        else
-        {
-            Collection<OrgUnitHashMap> orgUnitHashMaps = domain.values();
-            for(OrgUnitHashMap orgUnitHashMap : orgUnitHashMaps){
-                if (orgUnitHashMap.values().size() == 0){
-                    System.out.println(orgUnitHashMap.getOrgUnit().toString());
-                    orgUnitService.deleteOrgUnit(orgUnitHashMap.getOrgUnit());
-                }
-                else
-                {
-                    Collection<UserInfo> userInfos = orgUnitHashMap.values();
-                    for(UserInfo userInfo : userInfos){
-                        userInfoService.deleteUserInfo(userInfo);
-                    }
-                }
-            }
-        }
-    }
-
-    public static void fullDomainAdd(Domain domain){
-        DomainService domainService = ctx.getBean(DomainService.class);
-
-        domainService.addDomain(domain);
-        Domain updatedDomain = domainService.getByDomainName(domain.getDomainName());
-        for(OrgUnit orgUnit : domain.getOrgUnits()){
-            orgUnit.setGroupId(1L);
-            orgUnit.setDomainId(domain.getId());
-            fullOrgUnitAdd(orgUnit);
-        }
-    }
-
-    public static void fullOrgUnitAdd(OrgUnit orgUnit){
-        OrgUnitService orgUnitService = ctx.getBean(OrgUnitService.class);
-        orgUnitService.addOrgUnit(orgUnit);
-        OrgUnit updatedOrgUnit = orgUnitService.getByOrgUnitName(orgUnit.getOrgUnitName());
-        if (orgUnit.getUserInfos().size()!=0)
-        {
-            for(UserInfo userInfo : orgUnit.getUserInfos()) {
-                userInfo.setOrgUnitId(updatedOrgUnit.getId());
-                userInfoAdd(userInfo);
-            }
-        }
-    }
-
-    public static void userInfoAdd(UserInfo userInfo){
-        UserInfoService userInfoService = ctx.getBean(UserInfoService.class);
-        userInfoService.addUserInfo(userInfo);
-    }
-
-    public static void fullUpdate(HashMap<String, DomainHashMap> domainHashMapHashMap, Domain domain){
-        DomainService domainService = ctx.getBean(DomainService.class);
-        domain.setId(domainHashMapHashMap.get(domain.getDomainName()).getDomain().getId());
-        domainService.updateDomain(domain);
-        domainHashMapHashMap.remove(domain.getDomainName());
-        for(OrgUnit orgUnit : domain.getOrgUnits()) {
-            fullUpdateOrgUnits(orgUnit, domainHashMapHashMap.get(domain.getDomainName()));
-        }
-    }
-
-    public static void fullUpdateOrgUnits(OrgUnit orgUnit, DomainHashMap domainHashMap){
-        if (domainHashMap.containsKey(orgUnit.getOrgUnitName())){
-            fullUpdateUserInfo(orgUnit, domainHashMap.get(orgUnit.getOrgUnitName()));
-        }
-        else{
-            addUserInfo();
-        }
-        //fullOrgUnitDelete(domainHashMap.get;
-    }
-
-    public static void addUserInfo(){
-
-    }
-
-    public static void fullOrgUnitDelete(){
-
-    }
-
-    public static void fullUpdateUserInfo(OrgUnit orgUnit, OrgUnitHashMap orgUnitHashMap){
-        UserInfoService userInfoService = ctx.getBean(UserInfoService.class);
-        for(UserInfo userInfo : orgUnit.getUserInfos()) {
-            if (orgUnitHashMap.containsKey(userInfo.getEmail())) {
-                userInfo.setId(orgUnitHashMap.get(userInfo.getEmail()).getId());
-                userInfoService.updateUserInfo(userInfo);
-                orgUnitHashMap.remove(userInfo);
-            } else {
-                userInfo.setId(1000L);
-                userInfo.setOrgUnitId(orgUnit.getId());
-                userInfoService.addUserInfo(userInfo);
-            }
-        }
-        for(UserInfo userInfo : orgUnitHashMap.values()) {
-            userInfoService.deleteUserInfo(userInfo);
-            orgUnitHashMap.remove(userInfo);
-        }
-    }
-
-    public static void update(List<Domain> domains, HashMap<String, DomainHashMap> domainHashMapHashMap){
-        for(Domain domain :domains){
-            if (domainHashMapHashMap.containsKey(domain.getDomainName())){
-                fullUpdate(domainHashMapHashMap, domain);
-            }
-            else
-            {
-                fullDomainAdd(domain);
-            }
-        }
-        Collection<DomainHashMap> domainCollection = domainHashMapHashMap.values();
-        for(DomainHashMap domainHashMap : domainCollection){
-            fullDomainDelete(domainHashMap);
-        }
-    }
-
-    public static void main( String[] args )
-    {
-
-        ProgrammConfig programmConfig = new ProgrammConfig();
-        programmConfig.setServerHost("127.0.0.1");
-        programmConfig.setServerPort("8089");
+    public static Domain createFirstTestDomain(){
         Domain newdomain = new Domain();
         newdomain.setId(10000L);
-        newdomain.setDomainName("domain_name30");
+        newdomain.setDomainName("domain_name30000");
         newdomain.setDomainType(1L);
         newdomain.setOrgUnits(new ArrayList<>());
         OrgUnit newOrgUnit = new OrgUnit();
@@ -195,7 +27,7 @@ public class App
         newOrgUnit.setDescription("desc");
 
         UserInfo userInfo1 = new UserInfo();
-        userInfo1.setFirstName("newUser");
+        userInfo1.setFirstName("newUserWithNewName");
         userInfo1.setLastName("lName1012");
         userInfo1.setEmail("email1001@gmail.com");
         userInfo1.setPhones("88005553535001");
@@ -216,23 +48,13 @@ public class App
         List<OrgUnit> orgUnits = new ArrayList<>();
         orgUnits.add(newOrgUnit);
         newdomain.setOrgUnits(orgUnits);
+        return newdomain;
+    }
 
-        HashMap<String, DomainHashMap> domainHashMap = new HashMap<>();
-        try {
-            List<Domain> domains = StructureCreating.getListOfDomain(programmConfig);
-            for(Domain domain : domains){
-                domainHashMap.put(domain.getDomainName(), new DomainHashMap(domain));
-            }
-
-        } catch(Exception ex){
-            ex.printStackTrace();
-        }
-        List<Domain> newDomains = new ArrayList<>();
-        newDomains.add(newdomain);
-
+    public static Domain createSecondTestDomain(){
         Domain newdomain1 = new Domain();
         newdomain1.setId(10000L);
-        newdomain1.setDomainName("domain_name20222");
+        newdomain1.setDomainName("domain_name20000");
         newdomain1.setDomainType(0L);
         newdomain1.setOrgUnits(new ArrayList<>());
         OrgUnit newOrgUnit1 = new OrgUnit();
@@ -262,198 +84,45 @@ public class App
         List<OrgUnit> orgUnits1 = new ArrayList<>();
         orgUnits1.add(newOrgUnit1);
         newdomain1.setOrgUnits(orgUnits1);
+        return newdomain1;
+    }
 
-        newDomains.add(newdomain1);
+    public static void main( String[] args )
+    {
+        ProgrammConfig programmConfig = new ProgrammConfig();
+        programmConfig.setServerHost("127.0.0.1");
+        programmConfig.setServerPort("8089");
+
+        List<Domain> newDomains = new ArrayList<>();
+        newDomains.add(createFirstTestDomain());
+        newDomains.add(createSecondTestDomain());
+
+        HashMap<String, DomainHashMap> domainHashMap = new HashMap<>();
+        try {
+            List<Domain> domains = StructureCreating.getListOfDomain(programmConfig);
+            for(Domain domain : domains){
+                domainHashMap.put(domain.getDomainName(), new DomainHashMap(domain));
+            }
+        } catch(Exception ex){
+            ex.printStackTrace();
+        }
 
         List<Domain> domainsToAdd = new ArrayList<>();
-
         for(Domain domain : newDomains){
             if (domainHashMap.containsKey(domain.getDomainName())){
-                DomainServiceMapImpl.fullUpdateDomain(domainHashMap.get(domain.getDomainName()), domain);
+                new DomainServiceMapImpl(domainHashMap.get(domain.getDomainName())).update(domain);
                 domainHashMap.remove(domain.getDomainName());
             } else {
                 domainsToAdd.add(domain);
             }
         }
 
-        for(DomainHashMap domainHashMap1 : domainHashMap.values()){
-            DomainServiceMapImpl.fullDeleteDomain(domainHashMap1.getDomain());
+        for(DomainHashMap domainHashMapa : domainHashMap.values()){
+            new DomainServiceMapImpl().delete(domainHashMapa.getDomain());
         }
 
         for(Domain domain : domainsToAdd){
-            DomainServiceMapImpl.fullAddDomain(domain);
+            new DomainServiceMapImpl().add(domain);
         }
-        /*DomainService domainService = ctx.getBean(DomainService.class);
-
-
-        try {
-            List<Domain> domains = domainService.getAllDomains();
-            for(Domain domain : domains) {
-                System.out.println(domain.toString());
-            }
-            //Thread.sleep(10000);
-        } catch (Exception ex){
-            ex.printStackTrace();
-        }
-
-        OrgUnitService orgUnitService = ctx.getBean(OrgUnitService.class);
-        List<OrgUnit> orgUnits = orgUnitService.getByDomainId(3L);
-        System.out.println("size is " + orgUnits.size());
-        for(OrgUnit orgUnit : orgUnits){
-            System.out.println(orgUnit.toString());
-            if (orgUnit.getUserInfos()!=null){
-                System.out.println(orgUnit.getUserInfos().size());
-                for(UserInfo userInfo : orgUnit.getUserInfos()){
-                    System.out.println(userInfo.toString());
-                }
-            }
-            else
-                System.out.println(0);
-        }
-
-        try {
-            List<Domain> domains = StructureCreating.getListOfDomain(programmConfig);
-            HashMap<String, DomainHashMap> domainHashMapHashMap = new HashMap<>();
-            for(Domain domain : domains){
-                domainHashMapHashMap.put(domain.getDomainName(), new DomainHashMap(domain));
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-
-        /*HashMap<String, Domain> domainHashMap = new HashMap<>();
-        HashMap<String, OrgUnit> orgUnitHashMap = new HashMap<>();
-        HashMap<String, UserInfo> userInfoHashMap = new HashMap<>();
-        try {
-            List<Domain> domains = StructureCreating.getListOfDomain(programmConfig);
-            List<OrgUnit> orgUnits = StructureCreating.getListOfOrgUnits(programmConfig);
-            List<UserInfo> userInfos = StructureCreating.getListOfUserInfo(programmConfig);
-
-            for(Domain domain : domains) {
-                domainHashMap.put(domain.getDomainName(), domain);
-            }
-
-            for(OrgUnit orgUnit : orgUnits) {
-                orgUnitHashMap.put(orgUnit.getOrgUnitName(), orgUnit);
-            }
-
-            for(UserInfo userInfo : userInfos) {
-                userInfoHashMap.put(userInfo.getEmail(), userInfo);
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-
-
-        createStruct(programmConfig);
-
-
-
-        //createStruct(programmConfig);
-        /*Domain firstDomain = new Domain();
-        firstDomain.setOrgUnits(new ArrayList<>());
-        firstDomain.setDomainName("test_domain_2");
-        firstDomain.setDomainType(1L);
-
-        Domain secondDomain = new Domain();
-        secondDomain.setOrgUnits(new ArrayList<>());
-        secondDomain.setDomainName("check_2");
-        secondDomain.setDomainType(1L);
-
-        List<Domain> newDomains = new ArrayList<>();
-        newDomains.add(firstDomain);
-        newDomains.add(secondDomain);
-
-        DomainSync domainSync = new DomainSync();
-
-       /* UserInfoService userInfoService = ctx.getBean(UserInfoService.class);
-        try {
-            for (UserInfo domain : StructureCreating.getListOfUserInfo(programmConfig)) {
-                userInfoService.deleteUserInfo(domain);
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }*/
-
-        //domainSync.syncDomains(newDomains);
-       /* UserInfoService userInfoService = ctx.getBean(UserInfoService.class);
-
-        UserInfo userInfo1 = new UserInfo();
-        userInfo1.setFirstName("fName4");
-        userInfo1.setLastName("lName4");
-        userInfo1.setEmail("email@gmail.com");
-        userInfo1.setOrgUnitId(1L);
-        userInfo1.setPhones("8555353535");
-        userInfo1.setPosition("position");
-        //userInfoService.addUserInfo(userInfo1);
-        ProgrammConfig programmConfig = new ProgrammConfig();
-        programmConfig.setServerHost("127.0.0.1");
-        programmConfig.setServerPort("8089");
-
-        HashMap<String, UserInfo> userInfoHashMap = new HashMap<>();
-        try {
-            //Thread.sleep(10000);
-            List<UserInfo> userInfos = StructureCreating.getListOfUserInfo(programmConfig);
-            for(UserInfo userInfo : userInfos) {
-                userInfoHashMap.put(userInfo.getEmail(), userInfo);
-            }
-
-            List<UserInfo> updatedInfo = new ArrayList<>();
-            updatedInfo.add(userInfo1);
-
-            for(UserInfo userInfo : updatedInfo) {
-                if (userInfoHashMap.containsKey(userInfo.getEmail())){
-                   // userInfoService.updateUserInfo(userInfo);
-                    userInfoHashMap.remove(userInfo.getEmail());
-                }
-                else
-                {
-                    userInfoService.addUserInfo(userInfo);
-                }
-            }
-            for(UserInfo userInfo : userInfoHashMap.values())
-            {
-                System.out.println("delete " + userInfo.toString());
-                userInfoService.deleteUserInfo(userInfo);
-            }
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-
-
-/*
-
-        HashMap<String, UserInfo> currOrgUnit = new HashMap<>();
-        ProgrammConfig programmConfig = new ProgrammConfig();
-        programmConfig.setServerHost("127.0.0.1");
-        programmConfig.setServerPort("8089");
-        Domain domain = new Domain();
-        domain.setDomainType(0L);
-        domain.setDomainName("check");
-        domain.setId(2L);
-
-        OrgUnit orgUnit = new OrgUnit();
-        orgUnit.setOrgUnitName("TEST_org_unit_name_5");
-        orgUnit.setId(4L);
-        orgUnit.setGroupId(1L);
-        orgUnit.setDescription("desc");
-        orgUnit.setDomainId(2L);
-        orgUnit.setUserInfos(new ArrayList<>());
-        ArrayList<OrgUnit> orgUnits = new ArrayList<>();
-        orgUnits.add(orgUnit);
-        domain.setOrgUnits(orgUnits);
-
-        DomainHashTable hashTable = new DomainHashTable();
-
-
-
-        try {
-            StructureCreating.updateDomain(programmConfig, domain);
-            List<Domain> domains = StructureCreating.getListOfDomain(programmConfig);
-            hashTable.importing(domains);
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        System.out.println(hashTable.keySet().toString());*/
     }
 }

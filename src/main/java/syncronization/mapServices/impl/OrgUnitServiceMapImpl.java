@@ -1,34 +1,38 @@
-package syncronization;
+package syncronization.mapServices.impl;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import syncronization.last_test.OrgUnitHashMap;
-import syncronization.mapServices.impl.UserInfoMapServiceImpl;
+import syncronization.ApplicationConfig;
+import syncronization.hashMaps.OrgUnitHashMap;
+import syncronization.mapServices.ServiceMap;
 import syncronization.model.OrgUnit;
 import syncronization.model.OrgUnitService;
 import syncronization.model.UserInfo;
 import syncronization.model.UserInfoService;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
-public class OrgUnitServiceMapImpl  {
-    public static AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(ApplicationConfig.class);
+public class OrgUnitServiceMapImpl implements ServiceMap<OrgUnit> {
+    @Autowired
+    OrgUnitService orgUnitService = new AnnotationConfigApplicationContext(ApplicationConfig.class).getBean(OrgUnitService.class);
+    private OrgUnitHashMap orgUnitHashMap;
 
-
-    public OrgUnitServiceMapImpl(){
-
+    public OrgUnitServiceMapImpl(OrgUnitHashMap orgUnitHashMap){
+        this.orgUnitHashMap = orgUnitHashMap;
     }
 
-    public static void fullUpdate(OrgUnitHashMap orgUnitHashMap, OrgUnit newOrgUnit){
-        OrgUnitService orgUnitService = ctx.getBean(OrgUnitService.class);
+    public OrgUnitServiceMapImpl(){}
+
+    @Override
+    public void update(OrgUnit newOrgUnit){
         OrgUnit oldOrgUnit = orgUnitHashMap.getOrgUnit();
         List<UserInfo> userInfos = new ArrayList<>();
         for(UserInfo userInfo : newOrgUnit.getUserInfos()){
             if (orgUnitHashMap.containsKey(userInfo.getEmail())){
                 userInfo.setOrgUnitId(oldOrgUnit.getId());
                 userInfo.setId(orgUnitHashMap.get(userInfo.getEmail()).getId());
-                UserInfoMapImpl.fullUpdateUserInfo(userInfo);
+                new UserInfoMapImpl().update(userInfo);
                 orgUnitHashMap.remove(userInfo.getEmail());
             } else {
                 userInfo.setId(10000L);
@@ -39,12 +43,12 @@ public class OrgUnitServiceMapImpl  {
 
         for(UserInfo userInfo : orgUnitHashMap.values()){
             userInfo.setOrgUnitId(oldOrgUnit.getId());
-            UserInfoMapImpl.deleteUserInfo(userInfo);
+            new UserInfoMapImpl().delete(userInfo);
         }
 
         for(UserInfo userInfo : userInfos){
             userInfo.setOrgUnitId(oldOrgUnit.getId());
-            UserInfoMapImpl.addUserInfo(userInfo);
+            new UserInfoMapImpl().add(userInfo);
         }
 
         newOrgUnit.setDomainId(oldOrgUnit.getDomainId());
@@ -56,23 +60,23 @@ public class OrgUnitServiceMapImpl  {
 
     }
 
-    public static void fullAdd(OrgUnit orgUnit){
-        OrgUnitService orgUnitService = ctx.getBean(OrgUnitService.class);
+    @Override
+    public void add(OrgUnit orgUnit){
         System.out.println(orgUnit.toString());
         orgUnitService.addOrgUnit(orgUnit);
         OrgUnit updatedOrgUnit = orgUnitService.getByOrgUnitName(orgUnit.getOrgUnitName());
         if (orgUnit.getUserInfos()!= null){
             for(UserInfo userInfo : orgUnit.getUserInfos()){
                 userInfo.setOrgUnitId(updatedOrgUnit.getId());
-                UserInfoMapImpl.addUserInfo(userInfo);
+                new UserInfoMapImpl().add(userInfo);
             }
         }
     }
 
-    public static void fullDelete(OrgUnit orgUnit){
-        OrgUnitService orgUnitService = ctx.getBean(OrgUnitService.class);
+    @Override
+    public void delete(OrgUnit orgUnit){
         for(UserInfo userInfo : orgUnit.getUserInfos()){
-            UserInfoMapImpl.deleteUserInfo(userInfo);
+            new UserInfoMapImpl().delete(userInfo);
         }
         orgUnit.setUserInfos(new ArrayList<>());
         orgUnitService.deleteOrgUnit(orgUnit);

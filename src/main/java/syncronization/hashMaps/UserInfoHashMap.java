@@ -1,14 +1,12 @@
-package syncronization.last_test;
+package syncronization.hashMaps;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.User;
 import syncronization.model.OrgUnit;
 import syncronization.model.UserInfo;
 import syncronization.model.UserInfoService;
 
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 
 public class UserInfoHashMap extends HashMap<String, UserInfo> {
     private OrgUnit orgUnit;

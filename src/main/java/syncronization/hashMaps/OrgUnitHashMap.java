@@ -1,4 +1,4 @@
-package syncronization.last_test;
+package syncronization.hashMaps;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import syncronization.model.OrgUnit;
