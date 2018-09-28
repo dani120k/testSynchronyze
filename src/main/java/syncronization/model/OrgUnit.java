@@ -10,6 +10,30 @@ import java.util.Collection;
 @Table(name = "org_units")
 public class OrgUnit {
 
+    @Override
+    public boolean equals(Object obj) {
+        OrgUnit newOrgUnit = (OrgUnit) obj;
+        if (newOrgUnit.getDescription() == null)
+            newOrgUnit.setDescription("");
+        if (description == null)
+            description = "";
+        if (newOrgUnit.getOrgUnitName().equals(this.getOrgUnitName()) && newOrgUnit.getDescription().equals(this.description))
+            return true;
+        else
+            return false;
+    }
+
+    public String getDistinguishedName() {
+        return distinguishedName;
+    }
+
+    public void setDistinguishedName(String distinguishedName) {
+        this.distinguishedName = distinguishedName;
+    }
+    @Transient
+    private String distinguishedName;
+
+    //
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;

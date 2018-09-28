@@ -15,8 +15,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 public class DomainServiceMapImpl implements ServiceMap<Domain> {
-    @Autowired
-    DomainService domainService = new AnnotationConfigApplicationContext(ApplicationConfig.class).getBean(DomainService.class);
+    static DomainService domainService = new AnnotationConfigApplicationContext(ApplicationConfig.class).getBean(DomainService.class);
     private DomainHashMap domainHashMap;
 
     public DomainServiceMapImpl(DomainHashMap domainHashMap){
@@ -47,6 +46,7 @@ public class DomainServiceMapImpl implements ServiceMap<Domain> {
             OrgUnitServiceMapImpl orgUnitServiceMap = new OrgUnitServiceMapImpl(orgUnitHashMap);
             orgUnitServiceMap.delete(orgUnitHashMap.getOrgUnit());
         }
+        domainHashMap.clear();
 
         for(OrgUnit orgUnit : addOrgUnits){
             orgUnit.setGroupId(1L);
@@ -58,7 +58,28 @@ public class DomainServiceMapImpl implements ServiceMap<Domain> {
 
         newDomain.setId(oldDomain.getId());
         newDomain.setOrgUnits(new ArrayList<>());
-        domainService.updateDomain(newDomain);
+        if (updateIsRequired(newDomain, oldDomain)) {
+            loginfo("update domain", newDomain);
+            domainService.updateDomain(newDomain);
+        }
+    }
+
+    private void loginfo(String info, Object object){
+        System.out.println(info);
+        System.out.println(object.toString());
+        try{
+          //  Thread.sleep(1000);
+        } catch (Exception ex){
+            ex.printStackTrace();
+        }
+    }
+
+    public boolean updateIsRequired(Domain newDomain, Domain oldDomain){
+        if (newDomain.equals(oldDomain)){
+            return false;
+        } else {
+            return true;
+        }
     }
 
     @Override
@@ -68,14 +89,17 @@ public class DomainServiceMapImpl implements ServiceMap<Domain> {
             orgUnitServiceMap.delete(orgUnit);
         }
         domain.setOrgUnits(new ArrayList<>());
+        loginfo("delete domain", domain);
         domainService.deleteDomain(domain);
     }
 
     @Override
     public void add(Domain domain){
         domain.setId(10000L);///fix it
+        loginfo("add domain", domain);
         domainService.addDomain(domain);
         Domain updatedDomain = domainService.getByDomainName(domain.getDomainName());
+        loginfo("getUpdated domain", updatedDomain);
         for(OrgUnit orgUnit:domain.getOrgUnits()){
             orgUnit.setGroupId(1L);
             orgUnit.setDomainId(updatedDomain.getId());

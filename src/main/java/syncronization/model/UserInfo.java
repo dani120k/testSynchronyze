@@ -1,6 +1,7 @@
 package syncronization.model;
 
 import com.google.gson.Gson;
+import org.springframework.ldap.odm.annotations.Attribute;
 
 import javax.persistence.*;
 import java.sql.Timestamp;
@@ -16,14 +17,38 @@ public class UserInfo {
     public UserInfo() {
     }
 
+    public void setAfterProperties(){
+        if (lastName == null)
+            this.lastName = "lastName";
+        if (midleName == null)
+            this.midleName = "middleName";
+        if (phones == null)
+            this.phones = this.email;
+        if (position == null)
+            this.position = "position";
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        UserInfo newUserInfo = (UserInfo)obj;
+        if (newUserInfo.getEmail().equals(email) && newUserInfo.getFirstName().equals(firstName) &&
+                newUserInfo.getLastName().equals(lastName) && newUserInfo.getMidleName().equals(midleName) &&
+                newUserInfo.getPhones().equals(phones) && newUserInfo.getPosition().equals(position))
+            return true;
+        else
+            return false;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
     @Column(name = "first_name")
+    @Attribute(name = "cn")
     private String firstName;
 
     @Column(name = "last_name")
+    @Attribute(name = "sn")
     private String lastName;
 
     @Column(name = "midle_name")
@@ -32,15 +57,18 @@ public class UserInfo {
     //FIXME
     //https://stackoverflow.com/questions/25738569/jpa-map-json-column-to-java-object
     @Column(name = "phones")
+    @Attribute(name = "phone")
     private String phones;
 
     @Column(name = "email")
+    @Attribute(name="cn")
     private String email;
 
     @Column(name = "org_unit_id")
     private Long orgUnitId;
 
     @Column(name = "position")
+    @Attribute(name="title")
     private String position;
 
     //Здесь есть неразрешенная ошибка

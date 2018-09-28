@@ -9,6 +9,49 @@ import java.util.List;
 @Table(name = "domain")
 public class Domain {
 
+    @Override
+    public boolean equals(Object obj) {
+        Domain newDomain = (Domain)obj;
+        if (this.domainName.equals(newDomain.getDomainName()) &&
+                this.domainType == newDomain.getDomainType())
+            return true;
+        else
+            return false;
+    }
+
+    public List<Domain> getReferences() {
+        return references;
+    }
+
+    public void setReferences(List<Domain> references) {
+        this.references = references;
+    }
+    @Transient
+    private List<Domain> references;
+    public String getCN() {
+        return CN;
+    }
+
+    public void setCN(String CN) {
+        this.CN = CN;
+        this.domainName = CN;
+        this.domainType = 0L;
+    }
+    @Transient
+    private String CN;
+
+    public String getDistName() {
+        return DistName;
+    }
+
+    public void setDistName(String distName) {
+        DistName = distName;
+    }
+    @Transient
+    private String DistName;
+
+    //
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")

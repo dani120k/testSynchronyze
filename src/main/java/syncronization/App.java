@@ -1,20 +1,23 @@
 package syncronization;
 
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.ldap.core.LdapTemplate;
+import org.springframework.ldap.core.support.LdapContextSource;
 import syncronization.hashMaps.DomainHashMap;
 import syncronization.hashMaps.OrgUnitHashMap;
+import syncronization.importFrom.authorization.LdapConnection;
+import syncronization.importFrom.interfaces.ILdapConnection;
 import syncronization.mapServices.impl.DomainServiceMapImpl;
 import syncronization.model.*;
 import syncronization.update.StructureCreating;
 
 import java.util.*;
 
-/**
- * Hello world!
- *
- */
-public class App 
+public class App
 {
+    @GenerateBlaBla
+    private int number;
+
     public static Domain createFirstTestDomain(){
         Domain newdomain = new Domain();
         newdomain.setId(10000L);
@@ -87,18 +90,81 @@ public class App
         return newdomain1;
     }
 
+    public static List<Domain> importFullStructure(){
+        String userPrincipalName = "dani120l@rootDomain.com";
+        String password = "123Onebos50321";
+        String url = "rootDomain.com";
+        String base = "dc=rootDomain,dc=com";
+        String dn = "dani120l@rootDomain.com";
+
+        LdapContextSource ldapContextSource = new LdapContextSource();
+        ldapContextSource.setUrl("ldap://" + url);
+        ldapContextSource.setUserDn(dn);
+        ldapContextSource.setBase(base);
+        ldapContextSource.setPassword(password);
+        ldapContextSource.afterPropertiesSet();
+        LdapTemplate template = new LdapTemplate(ldapContextSource);
+        template.setIgnorePartialResultException(true);
+        Admin admin = new Admin(userPrincipalName, password);
+        ILdapConnection connection = new LdapConnection(template, admin);
+        System.out.println("getFullStruct");
+        List<Domain> domains = connection.getFullStructure();
+        System.out.println("size is " + domains.size());
+        try{Thread.sleep(1000);}catch (Exception ex){}
+
+        List<Domain> resultDomains = new ArrayList<>();
+        for(Domain domain : domains){
+            resultDomains.addAll(getAllReferences(domain));
+        }
+        for(Domain domain:resultDomains) {
+            domain.setReferences(new ArrayList<>());
+            System.out.println(domain.toString());
+        }
+        return resultDomains;
+    }
+
+    public static List<Domain> getAllReferences(Domain domain){
+        List<Domain> resultArray = new ArrayList<>();
+        resultArray.add(domain);
+        for(Domain domain1 : domain.getReferences()){
+            List<Domain> domainList = getAllReferences(domain1);
+            System.out.println("перед " + resultArray.size() + " " + domainList.size());
+            resultArray.addAll(domainList);
+            System.out.println("after " + resultArray.size());
+        }
+        return resultArray;
+    }
+
     public static void main( String[] args )
     {
         ProgrammConfig programmConfig = new ProgrammConfig();
         programmConfig.setServerHost("127.0.0.1");
         programmConfig.setServerPort("8089");
 
-        List<Domain> newDomains = new ArrayList<>();
+        /*Domain domain_test = new Domain();
+        domain_test.setDomainName("domain_name");
+        domain_test.setDomainType(0L);
+
+        Domain domain_test_1 = new Domain();
+        domain_test_1.setDomainType(0L);
+        domain_test_1.setDomainName("domain_name");
+        System.out.println(domain_test.equals(domain_test_1));
+        try{Thread.sleep(10000);}catch (Exception ex){}
+*/
+        /*List<Domain> newDomains = new ArrayList<>();
         newDomains.add(createFirstTestDomain());
-        newDomains.add(createSecondTestDomain());
+        newDomains.add(createSecondTestDomain());*/
+        System.out.println("start");
+        List<Domain> newDomains = importFullStructure();
+
 
         HashMap<String, DomainHashMap> domainHashMap = new HashMap<>();
         try {
+            System.out.println("start");
+            for(Domain domain : newDomains){
+                System.out.println(domain.toString());
+                System.out.println(domain.getDomainName());
+            }
             List<Domain> domains = StructureCreating.getListOfDomain(programmConfig);
             for(Domain domain : domains){
                 domainHashMap.put(domain.getDomainName(), new DomainHashMap(domain));

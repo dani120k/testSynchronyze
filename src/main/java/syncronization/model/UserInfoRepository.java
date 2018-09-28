@@ -9,6 +9,6 @@ import java.util.List;
 
 @Repository
 public interface UserInfoRepository<P> extends CrudRepository<UserInfo, Long> {
-    @Query("select b from UserInfo b where b.orgUnitId = :org_unit_id")
-    Iterable<P> findByDomainId(@Param("org_unit_id") Long org_unit_id);
+    @Query("select b from UserInfo b where b.email = :email")
+    P findByEmail(@Param("email") String email);
 }

@@ -48,8 +48,8 @@ public class UserInfoService{
     }
 
     @Transactional("jpaTransactionManager")
-    public List<UserInfo> findByOrgUnitId(Long id) {
-        return (List<UserInfo>)userInfoRepository.findByDomainId(id);
+    public UserInfo findByEmail(String email) {
+        return userInfoRepository.findByEmail(email);
     }
 
 }
