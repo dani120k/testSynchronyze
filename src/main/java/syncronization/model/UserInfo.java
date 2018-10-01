@@ -2,7 +2,9 @@ package syncronization.model;
 
 import com.google.gson.Gson;
 import org.springframework.ldap.odm.annotations.Attribute;
+import org.springframework.ldap.odm.annotations.Entry;
 
+import javax.naming.Name;
 import javax.persistence.*;
 import java.sql.Timestamp;
 import java.util.ArrayList;
@@ -12,7 +14,11 @@ import java.util.List;
 
 @Entity
 @Table(name = "user_info")
+@Entry(objectClasses = { "person", "top" })
 public class UserInfo {
+    @org.springframework.ldap.odm.annotations.Id
+    @Transient
+    private Name dn;
 
     public UserInfo() {
     }
@@ -52,6 +58,7 @@ public class UserInfo {
     private String lastName;
 
     @Column(name = "midle_name")
+    @Attribute(name = "middleName")
     private String midleName;
 
     //FIXME
@@ -61,10 +68,11 @@ public class UserInfo {
     private String phones;
 
     @Column(name = "email")
-    @Attribute(name="cn")
+    @Attribute(name="distinguishedName") //change to mail
     private String email;
 
     @Column(name = "org_unit_id")
+    @org.springframework.ldap.odm.annotations.Transient
     private Long orgUnitId;
 
     @Column(name = "position")
@@ -76,6 +84,7 @@ public class UserInfo {
     //Будем разбираться
     @OneToMany(fetch = FetchType.EAGER)
     @JoinColumn(name="user_info_id", referencedColumnName="id", updatable = false)
+    @org.springframework.ldap.odm.annotations.Transient
     private Collection<UserCredentials> userCredentials;
 
     @Override
@@ -86,9 +95,11 @@ public class UserInfo {
 
 
     @Transient
+    @org.springframework.ldap.odm.annotations.Transient
     private boolean interactionAllowed;
 
     @Transient
+    @org.springframework.ldap.odm.annotations.Transient
     private List<Timestamp> requestCreationTimestamps;
 
     public Long getId() {

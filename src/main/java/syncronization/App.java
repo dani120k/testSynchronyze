@@ -1,6 +1,7 @@
 package syncronization;
 
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
+import org.springframework.ldap.core.ContextSource;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.ldap.core.support.LdapContextSource;
 import syncronization.hashMaps.DomainHashMap;
@@ -15,9 +16,6 @@ import java.util.*;
 
 public class App
 {
-    @GenerateBlaBla
-    private int number;
-
     public static Domain createFirstTestDomain(){
         Domain newdomain = new Domain();
         newdomain.setId(10000L);
@@ -91,48 +89,56 @@ public class App
     }
 
     public static List<Domain> importFullStructure(){
-        String userPrincipalName = "dani120l@rootDomain.com";
+        String userPrincipalName = "ROOTDOMAIN\\Administrator";
         String password = "123Onebos50321";
         String url = "rootDomain.com";
         String base = "dc=rootDomain,dc=com";
-        String dn = "dani120l@rootDomain.com";
-
+        String dn = "ROOTDOMAIN\\Administrator";
         LdapContextSource ldapContextSource = new LdapContextSource();
         ldapContextSource.setUrl("ldap://" + url);
         ldapContextSource.setUserDn(dn);
         ldapContextSource.setBase(base);
         ldapContextSource.setPassword(password);
+        //ldapContextSource.setReferral("follow");
         ldapContextSource.afterPropertiesSet();
         LdapTemplate template = new LdapTemplate(ldapContextSource);
         template.setIgnorePartialResultException(true);
         Admin admin = new Admin(userPrincipalName, password);
         ILdapConnection connection = new LdapConnection(template, admin);
+        //try{Thread.sleep(10000);}catch (Exception ex){}
         System.out.println("getFullStruct");
         List<Domain> domains = connection.getFullStructure();
+        for(Domain domain : domains){
+            System.out.println(domain.toString());
+        }
         System.out.println("size is " + domains.size());
-        try{Thread.sleep(1000);}catch (Exception ex){}
+        List<Domain> resultDomains = new ArrayList<>();
+        for(Domain domain : domains){
+            resultDomains.add(domain);
+            if (domain.getReferences()!=null)
+                for(Domain child : domain.getReferences()){
+                    System.out.println("plus child");
+                    resultDomains.add(child);
+                }
+        }
 
+/*
         List<Domain> resultDomains = new ArrayList<>();
         for(Domain domain : domains){
             resultDomains.addAll(getAllReferences(domain));
         }
         for(Domain domain:resultDomains) {
+            //
             domain.setReferences(new ArrayList<>());
             System.out.println(domain.toString());
-        }
-        return resultDomains;
-    }
+            System.out.println("size of childs is " + domain.getR);
+        }*/
 
-    public static List<Domain> getAllReferences(Domain domain){
-        List<Domain> resultArray = new ArrayList<>();
-        resultArray.add(domain);
-        for(Domain domain1 : domain.getReferences()){
-            List<Domain> domainList = getAllReferences(domain1);
-            System.out.println("перед " + resultArray.size() + " " + domainList.size());
-            resultArray.addAll(domainList);
-            System.out.println("after " + resultArray.size());
-        }
-        return resultArray;
+
+
+
+        //try{Thread.sleep(100000);}catch (Exception ex){}
+        return resultDomains;
     }
 
     public static void main( String[] args )

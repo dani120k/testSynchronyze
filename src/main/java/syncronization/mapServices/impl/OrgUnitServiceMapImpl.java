@@ -42,7 +42,7 @@ public class OrgUnitServiceMapImpl implements ServiceMap<OrgUnit> {
             }
         }
 
-        if (orgUnitHashMap.size()!=0) {
+        if (orgUnitHashMap.values().size()!=0) {
             for (UserInfo userInfo : orgUnitHashMap.values()) {
                 //userInfo.setOrgUnitId(oldOrgUnit.getId());
                 new UserInfoMapImpl(new UserInfo()).delete(userInfo);

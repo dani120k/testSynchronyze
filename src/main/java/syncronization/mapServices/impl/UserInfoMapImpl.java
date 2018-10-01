@@ -24,6 +24,7 @@ public class UserInfoMapImpl implements ServiceMap<UserInfo> {
         System.out.println(userInfo.toString());
         userInfo.setAfterProperties();
         loginfo("addUserInfo", userInfo, null);
+        System.out.println(userInfo.toString());
         userInfoService.addUserInfo(userInfo);
     }
 

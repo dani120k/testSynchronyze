@@ -11,6 +11,7 @@ import org.springframework.ldap.query.SearchScope;
 import org.springframework.ldap.support.LdapUtils;
 import syncronization.UserContextMapper;
 import syncronization.importFrom.interfaces.IStructure;
+import syncronization.importFrom.ldapImport.UserInfoLdapImport;
 import syncronization.importFrom.mapper.DomainAttributesMapper;
 import syncronization.importFrom.mapper.OrgUnitAttributesMapper;
 import syncronization.importFrom.mapper.UserAttributesMapper;
@@ -28,9 +29,11 @@ public class Structure implements IStructure {
     private static final Logger LOG = LoggerFactory.getLogger(Structure.class);
     private LdapTemplate ldapTemplate;
     private int resultSizeLimit = 1000;
+    private LdapContextSource ldapContextSource;
 
-    public Structure(LdapTemplate ldapTemplate, Admin admin){
+    public Structure(LdapTemplate ldapTemplate, Admin admin, LdapContextSource ldapContextSource){
         this.ldapTemplate = ldapTemplate;
+        this.ldapContextSource = ldapContextSource;
         auth(ldapTemplate, admin);
     }
 
@@ -94,11 +97,12 @@ public class Structure implements IStructure {
                 .base(LdapUtils.emptyLdapName())
                 .where("objectCategory").is("trustedDomain")
                 .and("objectClass").is("trustedDomain")
-                .and("trustAttributes").is("32")
                 .and("cn").like("*."+currDomain.getCN())
                 .and("cn").not().like("*.*."+currDomain.getCN());
         try {
             List<Domain> childs = ldapTemplate.search(query, new DomainAttributesMapper());
+            System.out.println("size of child Domain " + childs.size());
+            //try{Thread.sleep(1000000);}catch (Exception ex){}
             currDomain.setReferences(childs);
         } catch (Exception ex) {
             LOG.error(ex.getMessage());
@@ -139,20 +143,23 @@ public class Structure implements IStructure {
 
     @Override
     public List<UserInfo> getListOfUsers(OrgUnit orgUnit, LdapTemplate ldapTemplate){
-        String[] attrs = new String[] {"cn","sn","givenName", "mail", "mobile", "title"};
         System.out.println(orgUnit.getDistinguishedName());
         LdapQuery query = query()
-                .searchScope(SearchScope.ONELEVEL)
-                .countLimit(resultSizeLimit)
-                .base(getOuFromDn(orgUnit.getDistinguishedName()))
-                .attributes(attrs)
+                //.searchScope(SearchScope.ONELEVEL)
+                //.countLimit(resultSizeLimit)
+                //.base(getOuFromDn(orgUnit.getDistinguishedName()))
                 .base(getOuFromDn(orgUnit.getDistinguishedName()))
                 .where("objectCategory").is("user");
         try {
-            List<UserInfo> userInfos = ldapTemplate.search(query, new UserAttributesMapper());
+            UserContextMapper userContextMapper = new UserContextMapper(ldapTemplate);
+            UserInfoLdapImport userInfoLdapImport = new UserInfoLdapImport(ldapTemplate, ldapTemplate.getContextSource(), userContextMapper, query);
+            List<UserInfo> userInfos = userInfoLdapImport.getOnlyActiveGoodWayMapped(ldapTemplate.getContextSource(), userContextMapper, getOuFromDn(orgUnit.getDistinguishedName()));
+
             orgUnit.setUserInfos(userInfos);
             return userInfos;
         } catch (Exception ex) {
+            System.out.println("size is 0");
+            //try{Thread.sleep(10000);}catch (Exception ex1){}
             LOG.error(ex.getMessage());
             return new ArrayList<>();
         }
@@ -189,8 +196,11 @@ public class Structure implements IStructure {
             System.out.println("auth accept to " + currentDomain.getCN());
             getListOfChildDomains(currentDomain);
             List<OrgUnit> listOfOrgUnits = getListOfOrgUnits(currentDomain, ldapTemplate);
-            for (OrgUnit orgUnit : listOfOrgUnits)
+            for (OrgUnit orgUnit : listOfOrgUnits) {
                 getListOfUsers(orgUnit, ldapTemplate);
+                System.out.println("size is " + getListOfUsers(orgUnit, ldapTemplate).size());
+                //try{Thread.sleep(10000);}catch (Exception ex){};
+            }
             for (Domain childDomain : currentDomain.getReferences())
                 importThisTree(childDomain, admin);
         }

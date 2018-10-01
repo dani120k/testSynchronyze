@@ -1,6 +1,7 @@
 package syncronization.importFrom.authorization;
 
 import org.springframework.ldap.core.LdapTemplate;
+import org.springframework.ldap.core.support.LdapContextSource;
 import syncronization.importFrom.interfaces.ILdapConnection;
 import syncronization.importFrom.interfaces.IStructure;
 import syncronization.model.Admin;
@@ -17,7 +18,7 @@ public class LdapConnection implements ILdapConnection {
         System.out.println("create ldap connection");
         this.rootTemplate = rootTemplate;
         this.admin = admin;
-        structure = new Structure(rootTemplate, admin);
+        structure = new Structure(rootTemplate, admin, new LdapContextSource());
         System.out.println("result og auth is " + ((Structure) structure).auth(rootTemplate, admin));
     }
 

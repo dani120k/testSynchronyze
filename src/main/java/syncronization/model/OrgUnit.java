@@ -1,14 +1,22 @@
 package syncronization.model;
 
 import com.google.gson.Gson;
+import org.springframework.ldap.odm.annotations.Attribute;
+import org.springframework.ldap.odm.annotations.Entry;
 
+import javax.naming.Name;
 import javax.persistence.*;
 import java.util.Collection;
 
 
 @Entity
 @Table(name = "org_units")
+@Entry(objectClasses = { "organizationalUnit", "top" })
 public class OrgUnit {
+
+    @org.springframework.ldap.odm.annotations.Id
+    @Transient
+    private Name dn;
 
     @Override
     public boolean equals(Object obj) {
@@ -31,6 +39,7 @@ public class OrgUnit {
         this.distinguishedName = distinguishedName;
     }
     @Transient
+    @Attribute(name="distinguishedName")
     private String distinguishedName;
 
     //
@@ -39,6 +48,7 @@ public class OrgUnit {
     private Long id;
 
     @Column(name = "name")
+    @Attribute(name="cn")
     private String orgUnitName;
 
     @Column(name = "description")

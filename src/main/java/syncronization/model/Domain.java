@@ -1,13 +1,20 @@
 package syncronization.model;
 
 import com.google.gson.Gson;
+import org.springframework.ldap.odm.annotations.Attribute;
+import org.springframework.ldap.odm.annotations.Entry;
 
+import javax.naming.Name;
 import javax.persistence.*;
 import java.util.List;
 
 @Entity
 @Table(name = "domain")
+@Entry(objectClasses = { "top", "domain" })
 public class Domain {
+    @org.springframework.ldap.odm.annotations.Id
+    @Transient
+    private Name dn;
 
     @Override
     public boolean equals(Object obj) {
@@ -27,6 +34,7 @@ public class Domain {
         this.references = references;
     }
     @Transient
+    @org.springframework.ldap.odm.annotations.Transient
     private List<Domain> references;
     public String getCN() {
         return CN;
@@ -38,6 +46,7 @@ public class Domain {
         this.domainType = 0L;
     }
     @Transient
+    @Attribute(name="cn")
     private String CN;
 
     public String getDistName() {
@@ -48,6 +57,7 @@ public class Domain {
         DistName = distName;
     }
     @Transient
+    @Attribute(name="distinguishedName")
     private String DistName;
 
     //
@@ -55,20 +65,24 @@ public class Domain {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")
+    @org.springframework.ldap.odm.annotations.Transient
     private Long id;
 
 
     @Column(name = "domain_name")
+    @Attribute(name="cn")
     private String domainName;
 
     //TODO описать это
     //0 - ручной, 1 - внешний
     @Column(name = "domain_type")
-    private Long domainType;
+    @org.springframework.ldap.odm.annotations.Transient
+    private Long domainType = 1L;
 
 
     @OneToMany(fetch = FetchType.EAGER)
     @JoinColumn(name="domain_id", referencedColumnName="id", updatable = false)
+    @org.springframework.ldap.odm.annotations.Transient
     private List<OrgUnit> orgUnits;
 
 
