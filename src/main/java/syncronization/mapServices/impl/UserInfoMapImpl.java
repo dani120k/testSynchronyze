@@ -10,7 +10,6 @@ import syncronization.model.UserInfoService;
 
 import javax.swing.*;
 
-import static syncronization.TestApp.progressBar2;
 
 public class UserInfoMapImpl implements ServiceMap<UserInfo> {
     static UserInfoService userInfoService = new AnnotationConfigApplicationContext(ApplicationConfig.class).getBean(UserInfoService.class);
@@ -22,7 +21,6 @@ public class UserInfoMapImpl implements ServiceMap<UserInfo> {
 
     @Override
     public void add(UserInfo userInfo){
-        progressBar2.setValue(progressBar2.getValue()+1);
         userInfo.setId(100000L);
         System.out.println(userInfo.toString());
         userInfo.setAfterProperties();
@@ -33,14 +31,12 @@ public class UserInfoMapImpl implements ServiceMap<UserInfo> {
 
     @Override
     public void delete(UserInfo userInfo){
-        progressBar2.setValue(progressBar2.getValue()+1);
         loginfo("delete userInfo", userInfo, null);
         userInfoService.deleteUserInfo(userInfo);
     }
 
     @Override
     public void update(UserInfo newuserInfo){
-        progressBar2.setValue(progressBar2.getValue()+1);
         System.out.println(newuserInfo.toString());
 
         newuserInfo.setAfterProperties();

@@ -1,17 +1,13 @@
 package syncronization.importFrom.ldapImport;
 
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ldap.control.PagedResultsDirContextProcessor;
 import org.springframework.ldap.core.ContextMapper;
 import org.springframework.ldap.core.ContextSource;
 import org.springframework.ldap.core.LdapTemplate;
-import org.springframework.ldap.core.support.LdapContextSource;
 import org.springframework.ldap.core.support.LdapOperationsCallback;
 import org.springframework.ldap.core.support.SingleContextSource;
 import org.springframework.ldap.query.LdapQuery;
-import org.springframework.ldap.query.LdapQueryBuilder;
-import syncronization.UserContextMapper;
-import syncronization.importFrom.normalMapper.OrgUnitContextMapper;
+import syncronization.importFrom.normalMapper.UserContextMapper;
 import syncronization.model.UserInfo;
 
 import javax.naming.directory.SearchControls;
@@ -20,15 +16,11 @@ import java.util.List;
 
 public class UserInfoLdapImport {
 
-    private final LdapTemplate ldapTemplate;
     private final ContextSource ldapContextSource;
-    private final UserContextMapper contextMapper;
     private LdapQuery query;
 
-    public UserInfoLdapImport(LdapTemplate ldapTemplate, ContextSource ldapContextSource, UserContextMapper userContextMapper, LdapQuery query){
-        this.ldapTemplate = ldapTemplate;
+    public UserInfoLdapImport(ContextSource ldapContextSource, LdapQuery query){
         this.ldapContextSource = ldapContextSource;
-        this.contextMapper = userContextMapper;
         this.query = query;
     }
 

@@ -9,12 +9,12 @@ import org.springframework.ldap.filter.EqualsFilter;
 import org.springframework.ldap.query.LdapQuery;
 import org.springframework.ldap.query.SearchScope;
 import org.springframework.ldap.support.LdapUtils;
-import syncronization.UserContextMapper;
 import syncronization.importFrom.authorization.IStructure;
 import syncronization.importFrom.ldapImport.OrgUnitLdapImport;
 import syncronization.importFrom.ldapImport.UserInfoLdapImport;
 import syncronization.importFrom.mapper.DomainAttributesMapper;
 import syncronization.importFrom.normalMapper.OrgUnitContextMapper;
+import syncronization.importFrom.normalMapper.UserContextMapper;
 import syncronization.model.Admin;
 import syncronization.model.Domain;
 import syncronization.model.OrgUnit;
@@ -144,7 +144,7 @@ public class Structure implements IStructure {
                 .where("objectCategory").is("user");
         try {
             UserContextMapper userContextMapper = new UserContextMapper(ldapTemplate);
-            UserInfoLdapImport userInfoLdapImport = new UserInfoLdapImport(ldapTemplate, ldapTemplate.getContextSource(), userContextMapper, query);
+            UserInfoLdapImport userInfoLdapImport = new UserInfoLdapImport(ldapTemplate.getContextSource(), query);
             List<UserInfo> userInfos = userInfoLdapImport.getOnlyActiveGoodWayMapped(userContextMapper, getOuFromDn(orgUnit.getOrgUnitName()));
 
             orgUnit.setUserInfos(userInfos);

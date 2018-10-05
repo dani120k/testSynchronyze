@@ -33,6 +33,6 @@ public class OrgUnitService {
     }
 
     public OrgUnit getByOrgUnitName(String orgUnitName){
-        return (OrgUnit) repository.findByOrgUnitName(orgUnitName);
+        return repository.findByOrgUnitName(orgUnitName);
     }
 }

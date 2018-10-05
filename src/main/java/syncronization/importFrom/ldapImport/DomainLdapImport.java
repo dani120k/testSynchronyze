@@ -9,7 +9,6 @@ import org.springframework.ldap.core.support.LdapOperationsCallback;
 import org.springframework.ldap.core.support.SingleContextSource;
 import org.springframework.ldap.query.LdapQuery;
 import org.springframework.ldap.query.LdapQueryBuilder;
-import syncronization.UserContextMapper;
 import syncronization.importFrom.normalMapper.DomainContextMapper;
 import syncronization.model.Domain;
 import syncronization.model.UserInfo;
