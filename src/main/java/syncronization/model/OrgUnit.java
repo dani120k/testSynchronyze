@@ -1,8 +1,11 @@
 package syncronization.model;
 
 import com.google.gson.Gson;
+import net.minidev.json.annotate.JsonIgnore;
 import org.springframework.ldap.odm.annotations.Attribute;
+import org.springframework.ldap.odm.annotations.DnAttribute;
 import org.springframework.ldap.odm.annotations.Entry;
+import syncronization.importFrom.normalMapper.OrgUnitContextMapper;
 
 import javax.naming.Name;
 import javax.persistence.*;
@@ -31,44 +34,39 @@ public class OrgUnit {
             return false;
     }
 
-    public String getDistinguishedName() {
-        return distinguishedName;
-    }
-
-    public void setDistinguishedName(String distinguishedName) {
-        this.distinguishedName = distinguishedName;
-    }
-    @Transient
-    @Attribute(name="distinguishedName")
-    private String distinguishedName;
-
-    //
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @org.springframework.ldap.odm.annotations.Transient
     private Long id;
 
     @Column(name = "name")
-    @Attribute(name="cn")
+    @Attribute(name="distinguishedName")
     private String orgUnitName;
 
     @Column(name = "description")
+    @Attribute(name="description")
     private String description;
 
     @Column(name = "group_id")
+    @org.springframework.ldap.odm.annotations.Transient
     private Long groupId;
 
     @Column(name = "domain_id")
+    @org.springframework.ldap.odm.annotations.Transient
     private Long domainId;
 
     @OneToMany(fetch = FetchType.EAGER)
     @JoinColumn(name="org_unit_id", referencedColumnName="id", updatable = false)
+    @org.springframework.ldap.odm.annotations.Transient
     private Collection<UserInfo> userInfos;
 
     @Transient
+    @org.springframework.ldap.odm.annotations.Transient
     private Long totalUsers;
 
 
     @Transient
+    @org.springframework.ldap.odm.annotations.Transient
     private Long totalDevices;
 
 

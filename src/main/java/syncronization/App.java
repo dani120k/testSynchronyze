@@ -1,16 +1,13 @@
 package syncronization;
 
 import org.springframework.context.annotation.AnnotationConfigApplicationContext;
-import org.springframework.ldap.core.ContextSource;
 import org.springframework.ldap.core.LdapTemplate;
 import org.springframework.ldap.core.support.LdapContextSource;
 import syncronization.hashMaps.DomainHashMap;
-import syncronization.hashMaps.OrgUnitHashMap;
-import syncronization.importFrom.authorization.LdapConnection;
-import syncronization.importFrom.interfaces.ILdapConnection;
+import syncronization.importFrom.authorization.impl.LdapConnection;
+import syncronization.importFrom.authorization.ILdapConnection;
 import syncronization.mapServices.impl.DomainServiceMapImpl;
 import syncronization.model.*;
-import syncronization.update.StructureCreating;
 
 import java.util.*;
 
@@ -143,6 +140,7 @@ public class App
 
     public static void main( String[] args )
     {
+
         ProgrammConfig programmConfig = new ProgrammConfig();
         programmConfig.setServerHost("127.0.0.1");
         programmConfig.setServerPort("8089");
@@ -162,16 +160,11 @@ public class App
         newDomains.add(createSecondTestDomain());*/
         System.out.println("start");
         List<Domain> newDomains = importFullStructure();
-
+        DomainService domainService = new AnnotationConfigApplicationContext(ApplicationConfig.class).getBean(DomainService.class);
 
         HashMap<String, DomainHashMap> domainHashMap = new HashMap<>();
         try {
-            System.out.println("start");
-            for(Domain domain : newDomains){
-                System.out.println(domain.toString());
-                System.out.println(domain.getDomainName());
-            }
-            List<Domain> domains = StructureCreating.getListOfDomain(programmConfig);
+            List<Domain> domains = domainService.getAllDomains();
             for(Domain domain : domains){
                 domainHashMap.put(domain.getDomainName(), new DomainHashMap(domain));
             }

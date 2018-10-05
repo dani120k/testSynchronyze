@@ -2,6 +2,7 @@ package syncronization.model;
 
 import com.google.gson.Gson;
 import org.springframework.ldap.odm.annotations.Attribute;
+import org.springframework.ldap.odm.annotations.DnAttribute;
 import org.springframework.ldap.odm.annotations.Entry;
 
 import javax.naming.Name;
@@ -19,6 +20,7 @@ public class UserInfo {
     @org.springframework.ldap.odm.annotations.Id
     @Transient
     private Name dn;
+
 
     public UserInfo() {
     }

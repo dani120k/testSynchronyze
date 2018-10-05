@@ -1,4 +1,4 @@
-package syncronization.importFrom.authorization;
+package syncronization.importFrom.authorization.impl;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,11 +10,11 @@ import org.springframework.ldap.query.LdapQuery;
 import org.springframework.ldap.query.SearchScope;
 import org.springframework.ldap.support.LdapUtils;
 import syncronization.UserContextMapper;
-import syncronization.importFrom.interfaces.IStructure;
+import syncronization.importFrom.authorization.IStructure;
+import syncronization.importFrom.ldapImport.OrgUnitLdapImport;
 import syncronization.importFrom.ldapImport.UserInfoLdapImport;
 import syncronization.importFrom.mapper.DomainAttributesMapper;
-import syncronization.importFrom.mapper.OrgUnitAttributesMapper;
-import syncronization.importFrom.mapper.UserAttributesMapper;
+import syncronization.importFrom.normalMapper.OrgUnitContextMapper;
 import syncronization.model.Admin;
 import syncronization.model.Domain;
 import syncronization.model.OrgUnit;
@@ -29,11 +29,9 @@ public class Structure implements IStructure {
     private static final Logger LOG = LoggerFactory.getLogger(Structure.class);
     private LdapTemplate ldapTemplate;
     private int resultSizeLimit = 1000;
-    private LdapContextSource ldapContextSource;
 
-    public Structure(LdapTemplate ldapTemplate, Admin admin, LdapContextSource ldapContextSource){
+    public Structure(LdapTemplate ldapTemplate, Admin admin){
         this.ldapTemplate = ldapTemplate;
-        this.ldapContextSource = ldapContextSource;
         auth(ldapTemplate, admin);
     }
 
@@ -111,15 +109,13 @@ public class Structure implements IStructure {
 
     @Override
     public List<OrgUnit> getListOfOrgUnits(Domain currDomain, LdapTemplate ldapTemplate){
-        String[] attrs = new String[] {"name", "description","distinguishedName"};
         LdapQuery query = query()
-                .searchScope(SearchScope.SUBTREE)
                 .base("")
-                .countLimit(resultSizeLimit)
-                .attributes(attrs)
                 .where("objectCategory").is("organizationalUnit");
         try {
-            List<OrgUnit> orgUnits = ldapTemplate.search(query, new OrgUnitAttributesMapper());
+            OrgUnitContextMapper orgUnitContextMapper = new OrgUnitContextMapper(ldapTemplate);
+            OrgUnitLdapImport orgUnitLdapImport = new OrgUnitLdapImport(ldapTemplate, ldapTemplate.getContextSource(), orgUnitContextMapper, query);
+            List<OrgUnit> orgUnits = orgUnitLdapImport.getOnlyActiveGoodWayMapped();
             currDomain.setOrgUnits(orgUnits);
             return orgUnits;
         } catch (Exception ex) {
@@ -143,23 +139,17 @@ public class Structure implements IStructure {
 
     @Override
     public List<UserInfo> getListOfUsers(OrgUnit orgUnit, LdapTemplate ldapTemplate){
-        System.out.println(orgUnit.getDistinguishedName());
         LdapQuery query = query()
-                //.searchScope(SearchScope.ONELEVEL)
-                //.countLimit(resultSizeLimit)
-                //.base(getOuFromDn(orgUnit.getDistinguishedName()))
-                .base(getOuFromDn(orgUnit.getDistinguishedName()))
+                .base(getOuFromDn(orgUnit.getOrgUnitName()))
                 .where("objectCategory").is("user");
         try {
             UserContextMapper userContextMapper = new UserContextMapper(ldapTemplate);
             UserInfoLdapImport userInfoLdapImport = new UserInfoLdapImport(ldapTemplate, ldapTemplate.getContextSource(), userContextMapper, query);
-            List<UserInfo> userInfos = userInfoLdapImport.getOnlyActiveGoodWayMapped(ldapTemplate.getContextSource(), userContextMapper, getOuFromDn(orgUnit.getDistinguishedName()));
+            List<UserInfo> userInfos = userInfoLdapImport.getOnlyActiveGoodWayMapped(userContextMapper, getOuFromDn(orgUnit.getOrgUnitName()));
 
             orgUnit.setUserInfos(userInfos);
             return userInfos;
         } catch (Exception ex) {
-            System.out.println("size is 0");
-            //try{Thread.sleep(10000);}catch (Exception ex1){}
             LOG.error(ex.getMessage());
             return new ArrayList<>();
         }
@@ -198,8 +188,6 @@ public class Structure implements IStructure {
             List<OrgUnit> listOfOrgUnits = getListOfOrgUnits(currentDomain, ldapTemplate);
             for (OrgUnit orgUnit : listOfOrgUnits) {
                 getListOfUsers(orgUnit, ldapTemplate);
-                System.out.println("size is " + getListOfUsers(orgUnit, ldapTemplate).size());
-                //try{Thread.sleep(10000);}catch (Exception ex){};
             }
             for (Domain childDomain : currentDomain.getReferences())
                 importThisTree(childDomain, admin);

@@ -1,4 +1,4 @@
-package syncronization.importFrom.interfaces;
+package syncronization.importFrom.authorization;
 
 import org.springframework.ldap.core.LdapTemplate;
 import syncronization.model.Admin;

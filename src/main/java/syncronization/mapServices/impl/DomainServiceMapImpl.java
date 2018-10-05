@@ -29,6 +29,9 @@ public class DomainServiceMapImpl implements ServiceMap<Domain> {
     public void update(Domain newDomain){
         Domain oldDomain = domainHashMap.getDomain();
         List<OrgUnit> addOrgUnits = new ArrayList<>();
+        System.out.println("new Domain is " + newDomain.getDomainName());
+        if (newDomain.getOrgUnits()==null)
+            System.out.println("orgUnits is null");
         for(OrgUnit orgUnit : newDomain.getOrgUnits()){
             if (domainHashMap.containsKey(orgUnit.getOrgUnitName())){
                 System.out.println("Update " + orgUnit.toString());

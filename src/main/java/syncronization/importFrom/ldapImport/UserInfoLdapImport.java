@@ -72,7 +72,7 @@ public class UserInfoLdapImport {
 
 
 
-    public List<UserInfo> getOnlyActiveGoodWayMapped(ContextSource ldapContextSource, UserContextMapper mapper, String base) {
+    public List<UserInfo> getOnlyActiveGoodWayMapped(UserContextMapper mapper, String base) {
         return SingleContextSource.doWithSingleContext(
                 ldapContextSource,
                 getGoodCallback(

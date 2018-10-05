@@ -17,7 +17,6 @@ public class DomainHashMap extends HashMap<String, OrgUnitHashMap> {
     }
 
     private void importFromList(){
-        System.out.println("size of real org units is " + domain.getOrgUnits().size());
         for(OrgUnit orgUnit : domain.getOrgUnits()){
             this.put(orgUnit.getOrgUnitName(), new OrgUnitHashMap(orgUnit));
         }

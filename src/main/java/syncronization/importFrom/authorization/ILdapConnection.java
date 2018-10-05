@@ -1,4 +1,4 @@
-package syncronization.importFrom.interfaces;
+package syncronization.importFrom.authorization;
 
 import syncronization.model.Domain;
 
